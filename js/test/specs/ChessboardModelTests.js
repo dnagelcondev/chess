@@ -9,42 +9,52 @@ define([
 
     fixtures
     ) {
-    describe("The Chessboard Model", function() {
+    describe("The Chessboard", function() {
         var board;
 
-        beforeEach(function() {
-            board = new Chessboard();
-        });
+        describe("when in the initial state", function() {
+            
+            beforeEach(function(done) {
+                board = new Chessboard();
 
-        it("should initialize", function() {
-            expect(board).toBeDefined();
-            expect(board.get('currentPlayer')).toEqual('Red');
-        });
+                serverMock.add({
+                    url: board.url(),
+                    response: fixtures.initialBoardState
+                });
 
-        it("starts with white as the default player", function() {
-            serverMock.add({
-                method: "POST",
-                url: board.url(),
-                response: fixtures.initialBoardState
+                serverMock.fetchAndWait(board, done);
             });
-            serverMock.saveAndWait(board, function() {
+            
+            afterEach(function() {
+                // TODO:  reset the mocked server to have no mocked URLs
+//                serverMock.reset();
+            });
+
+            it("should be an object", function() {
+                expect(board).toBeDefined();
+            });
+
+            it("starts with white as the first player", function() {
                 expect(board.get('currentPlayer')).toEqual('White');
             });
-
         });
-
-        it("can tell if the board when the board is in check", function() {
-            serverMock.add({
-                method: "POST",
-                url: board.url(),
-                response: fixtures.boardInCheckState
+        
+        describe("when Black is in check", function(done) {
+            beforeEach(function() {
+                serverMock.add({
+                    url: board.url(),
+                    response: fixtures.boardInCheckState
+                });
+                
+                serverMock.fetchAndWait(board, done);
             });
-
-            serverMock.saveAndWait(board, function() {
+            
+            it("can tell if the board when the board is in check", function() {
                 expect(board.isInCheck()).toEqual(true);
             });
-
+            
         });
+
 
     });
 });
